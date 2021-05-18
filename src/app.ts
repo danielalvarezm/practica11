@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Post
+
 app.post('/ingredient', (req, res) => {
   const ingredient = new Ingredient(req.body);
 
@@ -19,7 +20,8 @@ app.post('/ingredient', (req, res) => {
 });
 
 // Get
-/* app.get('/ingredient', (req, res) => {
+
+app.get('/ingredient', (req, res) => {
   const filter = req.query.name?{name: req.query.name.toString()}:{};
 
   Ingredient.find(filter).then((ingredient) => {
@@ -31,17 +33,17 @@ app.post('/ingredient', (req, res) => {
   }).catch(() => {
     res.status(500).send();
   });
-});*/
+});
 
 // Patch
-/*
-app.patch('/notes', (req, res) => {
-  if (!req.query.title) {
+
+app.patch('/ingredient', (req, res) => {
+  if (!req.query.name) {
     res.status(400).send({
-      error: 'A title must be provided',
+      error: 'A name must be provided',
     });
   } else {
-    const allowedUpdates = ['title', 'body', 'color'];
+    const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
     const actualUpdates = Object.keys(req.body);
     const isValidUpdate =
       actualUpdates.every((update) => allowedUpdates.includes(update));
@@ -51,21 +53,21 @@ app.patch('/notes', (req, res) => {
         error: 'Update is not permitted',
       });
     } else {
-      Note.findOneAndUpdate({title: req.query.title.toString()}, req.body, {
+      Ingredient.findOneAndUpdate({title: req.query.name.toString()}, req.body, {
         new: true,
         runValidators: true,
-      }).then((note) => {
-        if (!note) {
+      }).then((ingredient) => {
+        if (!ingredient) {
           res.status(404).send();
         } else {
-          res.send(note);
+          res.send(ingredient);
         }
       }).catch((error) => {
         res.status(400).send(error);
       });
     }
   }
-});*/
+});
 
 app.all('*', (_, res) => {
   res.status(501).send();
