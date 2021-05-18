@@ -19,7 +19,7 @@ app.post('/ingredient', (req, res) => {
 });
 
 // Get
-/* app.get('/ingredient', (req, res) => {
+app.get('/ingredient', (req, res) => {
   const filter = req.query.name?{name: req.query.name.toString()}:{};
 
   Ingredient.find(filter).then((ingredient) => {
@@ -31,7 +31,7 @@ app.post('/ingredient', (req, res) => {
   }).catch(() => {
     res.status(500).send();
   });
-});*/
+});
 
 // Patch
 /*
