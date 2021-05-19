@@ -1,11 +1,16 @@
 import * as express from 'express';
+import {loadDataCourse} from './courses';
 import './db/mongoose';
+import {Course} from './models/courses';
 import {Ingredient} from './models/ingredients';
+
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
+// Ingredients
 
 // Post
 
@@ -35,6 +40,20 @@ app.get('/ingredient', (req, res) => {
   });
 });
 
+// Get id
+
+app.get('/ingredient/:id', (req, res) => {
+  Ingredient.findById(req.params.id).then((ingredient) => {
+    if (!ingredient) {
+      res.status(404).send();
+    } else {
+      res.send(ingredient);
+    }
+  }).catch(() => {
+    res.status(500).send();
+  });
+});
+
 // Patch
 
 app.patch('/ingredient', (req, res) => {
@@ -53,7 +72,7 @@ app.patch('/ingredient', (req, res) => {
         error: 'Update is not permitted',
       });
     } else {
-      Ingredient.findOneAndUpdate({title: req.query.name.toString()}, req.body, {
+      Ingredient.findOneAndUpdate({name: req.query.name.toString()}, req.body, {
         new: true,
         runValidators: true,
       }).then((ingredient) => {
@@ -67,6 +86,85 @@ app.patch('/ingredient', (req, res) => {
       });
     }
   }
+});
+
+// Patch id
+
+app.patch('/ingredient/:id', (req, res) => {
+  const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
+  const actualUpdates = Object.keys(req.body);
+  const isValidUpdate =
+      actualUpdates.every((update) => allowedUpdates.includes(update));
+
+  if (!isValidUpdate) {
+    res.status(400).send({
+      error: 'Update is not permitted',
+    });
+  } else {
+    Ingredient.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }).then((ingredient) => {
+      if (!ingredient) {
+        res.status(404).send();
+      } else {
+        res.send(ingredient);
+      }
+    }).catch((error) => {
+      res.status(400).send(error);
+    });
+  }
+});
+
+// Delete
+
+app.delete('/ingredient', (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    Ingredient.findOneAndDelete({name: req.query.name.toString()}).then((ingredient) => {
+      if (!ingredient) {
+        res.status(404).send();
+      } else {
+        res.send(ingredient);
+      }
+    }).catch(() => {
+      res.status(400).send();
+    });
+  }
+});
+
+// Delete id
+
+app.delete('/ingredient/:id', (req, res) => {
+  Ingredient.findByIdAndDelete(req.params.id).then((ingredient) => {
+    if (!ingredient) {
+      res.status(404).send();
+    } else {
+      res.send(ingredient);
+    }
+  }).catch(() => {
+    res.status(400).send();
+  });
+});
+
+
+// Courses
+
+app.post('/course', (req, res) => {
+  loadDataCourse(req.body).then((courseData) => {
+    const course = new Course(courseData);
+
+    course.save().then((course) => {
+      res.status(201).send(course);
+    }).catch((error) => {
+      res.status(400).send(error);
+    });
+  }).catch((error) => {
+    res.status(400).send(error);
+  });
 });
 
 app.all('*', (_, res) => {

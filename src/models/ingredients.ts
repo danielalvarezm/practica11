@@ -1,16 +1,18 @@
 import {Document, Schema, model} from 'mongoose';
 
-interface IngredientInterface extends Document {
+export type foodGroup = 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits';
+
+export interface IngredientInterface extends Document {
   name: string,
   location: string,
   carboHydrates: number,
   proteins: number,
   lipids: number,
   price: number,
-  type: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
+  type: foodGroup,
 }
 
-const IngredientSchema = new Schema({
+export const IngredientSchema = new Schema({
   name: {
     type: String,
     unique: true,
