@@ -1,18 +1,21 @@
 /* eslint-disable prefer-promise-reject-errors */
-import {Ingredient, IngredientInterface, foodGroup} from './models/ingredients';
+import {Ingredient, IngredientInterface, foodGroup} from './models/ingredientsModel';
 
 interface CourseEntry {
     name: string,
-    food: [IngredientInterface, number][],
+    food: IngredientInterface[],
+    amountFood: number[],
     type: 'Starter' | 'First' | 'Second' | 'Dessert'
 };
 
 export const loadDataCourse = (data: CourseEntry) => {
-  console.log(data.food[0][0]);
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      data.food.forEach((element: [IngredientInterface, number]) => {
-        Ingredient.find({name: element[0].name}).catch(() => {
+    setTimeout(() => { ///////////////////////////////////////////////////////////////////////// MIRAR
+      
+      // COMPARAR TAMAÑOS DEL food y amountfood
+      
+      data.food.forEach((element) => {
+        Ingredient.find({name: element.name}).catch(() => {
           reject('Food not included in our database');
         });
       });
@@ -21,19 +24,18 @@ export const loadDataCourse = (data: CourseEntry) => {
       let carboHydrates: number = 0;
       let proteins: number = 0;
       let lipids: number = 0;
-      data.food.forEach((element) => {
-        carboHydrates += (element[0].carboHydrates / 100) * element[1];
-        proteins += (element[0].proteins / 100) * element[1];
-        lipids += (element[0].lipids / 100) * element[1];
-      });
-
+      for (let i: number = 0; i < data.food.length; i++) {
+        carboHydrates += (data.food[i].carboHydrates / 100) * data.amountFood[i];
+        proteins += (data.food[i].proteins / 100) * data.amountFood[i];
+        lipids += (data.food[i].lipids / 100) * data.amountFood[i];
+      }
 
       // ////// Predominant group
       const counter = new Map<foodGroup, number>();
       let group: foodGroup;
 
       data.food.forEach((element) => {
-        group = element[0].type;
+        group = element.type;
         if (counter.has(group)) {
           counter.set(group, Number(counter.get(group)) + 1);
         } else {
@@ -50,14 +52,12 @@ export const loadDataCourse = (data: CourseEntry) => {
         }
       });
 
-
       // ////////////////// Calculte price
       let totalPrice: number = 0;
-      data.food.forEach((element) => {
-        totalPrice += (element[0].price / 1000) * element[1];
-      });
+      for (let i: number = 0; i < data.food.length; i++) {
+        totalPrice += (data.food[i].price / 1000) * data.amountFood[i];
+      };
 
-      // let aux: string = data.name;
       resolve({
         name: data.name,
         carboHydrates: carboHydrates,
@@ -66,6 +66,7 @@ export const loadDataCourse = (data: CourseEntry) => {
         groupFood: maxGroup,
         price: totalPrice,
         food: data.food,
+        amountFood: data.amountFood,
         type: data.type,
       });
     }, 1000);

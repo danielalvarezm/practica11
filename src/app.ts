@@ -1,8 +1,8 @@
 import * as express from 'express';
 import {loadDataCourse} from './courses';
 import './db/mongoose';
-import {Course} from './models/courses';
-import {Ingredient} from './models/ingredients';
+import {Course} from './models/coursesModel';
+import {Ingredient} from './models/ingredientsModel';
 
 
 const app = express();
