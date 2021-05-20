@@ -10,7 +10,9 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Ingredients
+// ///////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////// INGREDIENTS ///////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////////
 
 // Post
 
@@ -150,8 +152,9 @@ app.delete('/ingredient/:id', (req, res) => {
   });
 });
 
-
-// Courses
+// ///////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////// COURSES ///////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////////
 
 // Post
 
@@ -162,9 +165,78 @@ app.post('/course', (req, res) => {
   course.save().then((course) => {
     res.status(201).send(course);
   }).catch((error) => {
-    console.log(course);   //////////////////////////
     res.status(400).send(error);
   });
+});
+
+// Get
+
+app.get('/course', (req, res) => {
+  const filter = req.query.name?{name: req.query.name.toString()}:{};
+
+  Course.find(filter).then((course) => {
+    if (course.length !== 0) {
+      res.send(course);
+    } else {
+      res.status(404).send();
+    }
+  }).catch(() => {
+    res.status(500).send();
+  });
+});
+
+// Patch
+
+app.patch('/course', (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    const allowedUpdates = ['name', 'carboHydrates', 'proteins', 'lipids', 'groupFood', 'price', 'type', 'ingredients'];
+    const actualUpdates = Object.keys(req.body);
+    const isValidUpdate =
+      actualUpdates.every((update) => allowedUpdates.includes(update));
+
+    if (!isValidUpdate) {
+      res.status(400).send({
+        error: 'Update is not permitted',
+      });
+    } else {
+      Course.findOneAndUpdate({name: req.query.name.toString()}, req.body, {
+        new: true,
+        runValidators: true,
+      }).then((course) => {
+        if (!course) {
+          res.status(404).send();
+        } else {
+          res.send(course);
+        }
+      }).catch((error) => {
+        res.status(400).send(error);
+      });
+    }
+  }
+});
+
+// Delete
+
+app.delete('/course', (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    Course.findOneAndDelete({name: req.query.name.toString()}).then((course) => {
+      if (!course) {
+        res.status(404).send();
+      } else {
+        res.send(course);
+      }
+    }).catch(() => {
+      res.status(400).send();
+    });
+  }
 });
 
 app.all('*', (_, res) => {
