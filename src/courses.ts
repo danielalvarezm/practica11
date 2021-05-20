@@ -1,4 +1,3 @@
-/* eslint-disable prefer-promise-reject-errors */
 import {foodGroup} from './models/ingredientsModel';
 
 interface CourseEntry {

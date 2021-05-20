@@ -2,7 +2,7 @@ import {Document, Schema, model} from 'mongoose';
 
 export type foodGroup = 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits';
 
-export interface IngredientInterface extends Document {
+interface IngredientInterface extends Document {
   name: string,
   location: string,
   carboHydrates: number,
@@ -12,7 +12,7 @@ export interface IngredientInterface extends Document {
   type: foodGroup,
 }
 
-export const IngredientSchema = new Schema({
+const IngredientSchema = new Schema({
   name: {
     type: String,
     unique: true,

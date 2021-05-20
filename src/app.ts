@@ -156,12 +156,13 @@ app.delete('/ingredient/:id', (req, res) => {
 // Post
 
 app.post('/course', (req, res) => {
-  const course = new Course(loadDataCourse(req.body));
-
+  const courseData = loadDataCourse(req.body);
+  const course = new Course(courseData);
+  console.log(course);
   course.save().then((course) => {
     res.status(201).send(course);
   }).catch((error) => {
-    console.log(course);
+    console.log(course);   //////////////////////////
     res.status(400).send(error);
   });
 });
