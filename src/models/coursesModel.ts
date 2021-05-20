@@ -9,8 +9,8 @@ interface CourseInterface extends Document {
   groupFood: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
   price: number,
   ingredients: [{
-    "ingredient": IngredientInterface,
-    "quantity": number
+    ingredient: IngredientInterface,
+    quantity: number
   }],
   type: 'Starter' | 'First' | 'Second' | 'Dessert',
 }
@@ -46,8 +46,8 @@ const CourseSchema = new Schema({
   },
   ingredients: {
     type: [{
-      "ingredient": IngredientSchema,
-      "quantity": Number,
+      ingredient: IngredientSchema,
+      quantity: Number,
     }],
     required: true,
   },
