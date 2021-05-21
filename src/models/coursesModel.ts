@@ -1,7 +1,7 @@
 import {Document, Schema, model} from 'mongoose';
 // import {foodGroup} from './ingredientsModel';
 
-interface CourseInterface extends Document {
+export interface CourseInterface extends Document {
   name: string,
   carboHydrates: number,
   proteins: number,
@@ -23,7 +23,7 @@ interface CourseInterface extends Document {
   type: 'Starter' | 'First' | 'Second' | 'Dessert',
 }
 
-const CourseSchema = new Schema({
+export const CourseSchema = new Schema({
   name: {
     type: String,
     unique: true,
