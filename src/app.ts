@@ -193,7 +193,7 @@ app.patch('/course', (req, res) => {
       error: 'A name must be provided',
     });
   } else {
-    const allowedUpdates = ['name', 'carboHydrates', 'proteins', 'lipids', 'groupFood', 'price', 'type', 'ingredients'];
+    const allowedUpdates = ['name', 'carboHydrates', 'proteins', 'lipids', 'groupFood', 'price', 'ingredients', 'type'];
     const actualUpdates = Object.keys(req.body);
     const isValidUpdate =
       actualUpdates.every((update) => allowedUpdates.includes(update));
