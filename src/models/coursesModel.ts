@@ -1,5 +1,5 @@
 import {Document, Schema, model} from 'mongoose';
-// import {foodGroup} from './ingredientsModel';
+// import {IngredientInterface, IngredientSchema} from './ingredientsModel';
 
 interface CourseInterface extends Document {
   name: string,
@@ -9,17 +9,9 @@ interface CourseInterface extends Document {
   groupFood: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
   price: number,
   ingredients: [{
-    "ingredient": {
-      "name": string,
-      "location": string,
-      "carboHydrates": number,
-      "proteins": number,
-      "lipids": number,
-      "price": number,
-      "type": 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
-    },
-    "quantity": number
+    id_: string,
   }],
+  quantity: number[],
   type: 'Starter' | 'First' | 'Second' | 'Dessert',
 }
 
@@ -54,20 +46,14 @@ const CourseSchema = new Schema({
   },
   ingredients: {
     type: [{
-      "ingredient": {
-        "name": String,
-        "location": String,
-        "carboHydrates": Number,
-        "proteins": Number,
-        "lipids": Number,
-        "price": Number,
-        "type": {
-          type: String,
-          enum: ['Proteins', 'Vegetables', 'Dairy', 'Cereals', 'Fruits'],
-        },
-      },
-      "quantity": Number,
+      type: Schema.Types.ObjectId,
+      ref: 'Ingredient',
     }],
+    required: true,
+  },
+  quantity: {
+    type: [Number],
+    required: true,
   },
   type: {
     type: String,
