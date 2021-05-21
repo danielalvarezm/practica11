@@ -88,4 +88,4 @@ const MenuSchema = new Schema({
   },
 });
 
-export const Menu = model<MenuInterface>('Menu', MenuSchema);
+export const Menu = model<MenuInterface>('Menu', MenuSchema); 
