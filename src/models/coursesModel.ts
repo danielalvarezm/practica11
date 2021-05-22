@@ -1,7 +1,6 @@
 import {Document, Schema, model} from 'mongoose';
-// import {IngredientInterface, IngredientSchema} from './ingredientsModel';
 
-interface CourseInterface extends Document {
+export interface CourseInterface extends Document {
   name: string,
   carboHydrates: number,
   proteins: number,

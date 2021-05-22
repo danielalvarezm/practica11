@@ -1,32 +1,16 @@
-/*import {Document, Schema, model} from 'mongoose';
+import {Document, Schema, model} from 'mongoose';
+import {foodGroup} from './ingredientsModel';
 
-interface MenuInterface extends Document {
-    name: string,
-    carboHydrates: number,
-    proteins: number,
-    lipids: number,
-    plates: [{
-        name: string,
-        carboHydrates: number,
-        proteins: number,
-        lipids: number,
-        groupFood: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
-        price: number,
-        ingredients: [{
-            "ingredient": {
-            "name": string,
-            "location": string,
-            "carboHydrates": number,
-            "proteins": number,
-            "lipids": number,
-            "price": number,
-            "type": 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
-        },
-        "quantity": number
+export interface MenuInterface extends Document {
+  name: string,
+  carboHydrates: number,
+  proteins: number,
+  lipids: number,
+  courses: [{
+    id_: string,
   }],
-        type: 'Starter' | 'First' | 'Second' | 'Dessert',
-  }]
-    price: number
+  foodGroupList: foodGroup[],
+  price: number
 }
 
 const MenuSchema = new Schema({
@@ -48,7 +32,21 @@ const MenuSchema = new Schema({
     type: Number,
     required: true,
   },
-
-
+  courses: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Courses',
+    }],
+    required: true,
+  },
+  foodGroupList: {
+    type: [String],
+    required: true, //mirar como validar que son todos foodGroup
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
 });
-*/
+
+export const Menu = model<MenuInterface>('Menu', MenuSchema);

@@ -3,6 +3,9 @@ import {calculateMacronutrients, loadDataCourse, predominantGroup, totalPrice} f
 import './db/mongoose';
 import {Course} from './models/coursesModel';
 import {Ingredient, IngredientInterface} from './models/ingredientsModel';
+import {CourseInterface} from './models/coursesModel';
+import {nutritionalComposition, getFoodList, calculatePrice} from './menus';
+import { Menu } from './models/menusModel';
 
 
 const app = express();
@@ -16,7 +19,7 @@ app.use(express.json());
 
 // Post
 
-app.post('/ingredient', (req, res) => {
+app.post('/ingredients', (req, res) => {
   const ingredient = new Ingredient(req.body);
 
   ingredient.save().then((ingredient) => {
@@ -28,7 +31,7 @@ app.post('/ingredient', (req, res) => {
 
 // Get
 
-app.get('/ingredient', (req, res) => {
+app.get('/ingredients', (req, res) => {
   const filter = req.query.name?{name: req.query.name.toString()}:{};
 
   Ingredient.find(filter).then((ingredient) => {
@@ -46,7 +49,7 @@ app.get('/ingredient', (req, res) => {
 
 // Get id
 
-app.get('/ingredient/:id', (req, res) => {
+app.get('/ingredients/:id', (req, res) => {
   Ingredient.findById(req.params.id).then((ingredient) => {
     if (!ingredient) {
       res.status(404).send({
@@ -62,7 +65,7 @@ app.get('/ingredient/:id', (req, res) => {
 
 // Patch
 
-app.patch('/ingredient', (req, res) => {
+app.patch('/ingredients', (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: 'A name must be provided',
@@ -98,7 +101,7 @@ app.patch('/ingredient', (req, res) => {
 
 // Patch id
 
-app.patch('/ingredient/:id', (req, res) => {
+app.patch('/ingredients/:id', (req, res) => {
   const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
   const actualUpdates = Object.keys(req.body);
   const isValidUpdate =
@@ -128,7 +131,7 @@ app.patch('/ingredient/:id', (req, res) => {
 
 // Delete
 
-app.delete('/ingredient', (req, res) => {
+app.delete('/ingredients', (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: 'A name must be provided',
@@ -150,7 +153,7 @@ app.delete('/ingredient', (req, res) => {
 
 // Delete id
 
-app.delete('/ingredient/:id', (req, res) => {
+app.delete('/ingredients/:id', (req, res) => {
   Ingredient.findByIdAndDelete(req.params.id).then((ingredient) => {
     if (!ingredient) {
       res.status(404).send({
@@ -170,7 +173,7 @@ app.delete('/ingredient/:id', (req, res) => {
 
 // Post
 
-app.post('/course', async (req, res) => {
+app.post('/courses', async (req, res) => {
   const courseObject = req.body;
   if (!courseObject.name || !courseObject.ingredients || !courseObject.quantity || !courseObject.type ||
     courseObject.ingredients.length != courseObject.quantity.length) {
@@ -211,7 +214,7 @@ app.post('/course', async (req, res) => {
 
 // Get
 
-app.get('/course', (req, res) => {
+app.get('/courses', (req, res) => {
   const filter = req.query.name?{name: req.query.name.toString()}:{};
 
   Course.find(filter).then((course) => {
@@ -231,7 +234,7 @@ app.get('/course', (req, res) => {
 
 // Patch
 
-app.patch('/course', async (req, res) => {
+app.patch('/courses', async (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: 'A name must be provided',
@@ -247,7 +250,6 @@ app.patch('/course', async (req, res) => {
         error: 'Update is not permitted',
       });
     } else {
-      console.log(req.body);
       const courseObject = req.body;
       if ((courseObject.ingredients && !courseObject.quantity) ||
       (!courseObject.ingredients && courseObject.quantity)) {
@@ -307,7 +309,7 @@ app.patch('/course', async (req, res) => {
 
 // Delete
 
-app.delete('/course', (req, res) => {
+app.delete('/courses', (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: 'A name must be provided',
@@ -320,6 +322,146 @@ app.delete('/course', (req, res) => {
         });
       } else {
         res.send(course);
+      }
+    }).catch((error) => {
+      res.status(400).send(error);
+    });
+  }
+});
+
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////// MENUS ///////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////////
+
+// Post
+
+app.post('/menus', async (req, res) => {
+  const menuObject = req.body;
+  if (!menuObject.name || !menuObject.courses) {
+    res.status(500).send({
+      error: 'One of the properties required to create a plate has not been defined', // /////////MIRAR ERRORES
+    });
+    return;
+  }
+  const arrayCourses: CourseInterface[] = [];
+  for (let i: number = 0; i < menuObject.courses.length; i++) {
+    const filter = {name: menuObject.courses[i]};
+    const courseCorrect = await Course.findOne(filter);
+    if (courseCorrect != null) {
+      arrayCourses.push(courseCorrect);
+    } else {
+      res.status(500).send({
+        error: 'An course is not found in the database',
+      });
+      return;
+    }
+  }
+
+  const macronutrients = nutritionalComposition(arrayCourses);
+  const menuCorrectly = {
+    name: menuObject.name,
+    carboHydrates: macronutrients[0],
+    proteins: macronutrients[1],
+    lipids: macronutrients[2],
+    courses: arrayCourses,
+    foodGroupList: getFoodList(arrayCourses),
+    price: calculatePrice(arrayCourses),
+  };
+
+  const menu = new Menu(menuCorrectly);
+  menu.save().then((menu) => {
+    res.status(201).send(menu);
+  }).catch((error) => {
+    res.status(400).send(error);
+  });
+});
+
+// Get
+
+/*app.get('/menus', (req, res) => {
+  const filter = req.query.name?{name: req.query.name.toString()}:{};
+
+
+});*/
+
+// Patch
+
+app.patch('/menus', async (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    const allowedUpdates = ['name', 'courses'];
+    const actualUpdates = Object.keys(req.body);
+    const isValidUpdate =
+      actualUpdates.every((update) => allowedUpdates.includes(update));
+
+    if (!isValidUpdate) {
+      res.status(400).send({
+        error: 'Update is not permitted',
+      });
+    } else {
+      const menuObject = req.body;
+      if (menuObject.courses) {
+        const arrayCourses: CourseInterface[] = [];
+        for (let i: number = 0; i < menuObject.courses.length; i++) {
+          const filter = {name: menuObject.courses[i]};
+          const courseCorrect = await Course.findOne(filter);
+          if (courseCorrect != null) {
+            arrayCourses.push(courseCorrect);
+          } else {
+            res.status(500).send({
+              error: 'An course is not found in the database',
+            });
+            return;
+          }
+        }
+        const macronutrients = nutritionalComposition(arrayCourses);
+        const newData = {
+          carboHydrates: macronutrients[0],
+          proteins: macronutrients[1],
+          lipids: macronutrients[2],
+          courses: arrayCourses,
+          foodGroupList: getFoodList(arrayCourses),
+          price: calculatePrice(arrayCourses),
+        };
+        Object.assign(menuObject, newData);
+      }
+      Menu.findOneAndUpdate({name: req.query.name.toString()}, menuObject, {
+        new: true,
+        runValidators: true,
+      }).then((course) => {
+        if (!course) {
+          res.status(404).send({
+            error: 'Update is not permitted',
+          });
+        } else {
+          res.send(course);
+        }
+      }).catch((error) => {
+        res.status(400).send(error);
+      });
+    }
+  }
+});
+
+// Delete
+
+app.delete('/menus', (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    Menu.findOneAndDelete({name: req.query.name.toString()}).then((menu) => {
+      if (!menu) {
+        res.status(404).send({
+          error: 'Delete is not permitted',
+        });
+      } else {
+        res.send(menu);
       }
     }).catch((error) => {
       res.status(400).send(error);
