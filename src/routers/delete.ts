@@ -2,6 +2,7 @@ import * as express from 'express';
 import {Course} from '../models/coursesModel';
 import {Ingredient} from '../models/ingredientsModel';
 import '../db/mongoose';
+import {Menu} from '../models/menusModel';
 
 export const deleteRouter = express.Router();
 
@@ -41,7 +42,7 @@ deleteRouter.delete('/ingredients/:id', async (req, res) => {
 });
 
 // Courses by name
-deleteRouter.delete('/courses', async(req, res) => {
+deleteRouter.delete('/courses', async (req, res) => {
   if(!req.query.name) {
     return res.status(400).send({
       error: 'A name must be provided',
@@ -58,6 +59,28 @@ deleteRouter.delete('/courses', async(req, res) => {
     }
 
     return res.send(course);
+  } catch (error) {
+    return res.status(400).send(error);
+  }
+});
+
+// Menus by name
+deleteRouter.delete('/menus', async (req, res) => {
+  if (!req.query.name) {
+    return res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } 
+  try {
+    const menu = await Menu.findOneAndDelete({name: req.query.name.toString()});
+
+    if (!menu) {
+      return res.status(404).send({
+        error: 'Delete is not permitted',
+      });
+    } 
+      
+    return res.send(menu); 
   } catch (error) {
     return res.status(400).send(error);
   }

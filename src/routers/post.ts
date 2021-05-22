@@ -1,7 +1,9 @@
 import * as express from 'express';
 import {loadDataCourse} from '../courses';
-import {Course} from '../models/coursesModel';
+import {Course, CourseInterface} from '../models/coursesModel';
 import {Ingredient, IngredientInterface} from '../models/ingredientsModel';
+import { nutritionalComposition, getFoodList, calculatePrice } from '../menus';
+import { Menu } from '../models/menusModel';
 import '../db/mongoose';
 
 export const postRouter = express.Router();
@@ -23,10 +25,9 @@ postRouter.post('/ingredients', async(req, res) => {
     const courseObject = req.body;
     if (!courseObject.name || !courseObject.ingredients || !courseObject.quantity || !courseObject.type ||
       courseObject.ingredients.length != courseObject.quantity.length) {
-      res.status(500).send({
+      return res.status(500).send({
         error: 'One of the properties required to create a plate has not been defined', // /////////MIRAR ERRORES
       });
-      return;
     }
     const arrayIngredients: IngredientInterface[] = [];
     for (let i: number = 0; i < courseObject.ingredients.length; i++) {
@@ -35,10 +36,9 @@ postRouter.post('/ingredients', async(req, res) => {
       if (ingredientCorrect != null) {
         arrayIngredients.push(ingredientCorrect);
       } else {
-        res.status(500).send({
+        return res.status(500).send({
           error: 'An ingredient is not found in the database',
         });
-        return;
       }
     }
   
@@ -52,9 +52,49 @@ postRouter.post('/ingredients', async(req, res) => {
     try {
       const course = new Course(loadDataCourse(courseCorrectly));
       await course.save();
-      res.status(201).send(course);
+      return res.status(201).send(course);
     } catch (error) {
-      res.status(400).send(error);
+      return res.status(400).send(error);
     }
   });
   
+// Menus by name
+postRouter.post('/menus', async (req, res) => {
+  const menuObject = req.body;
+  if (!menuObject.name || !menuObject.courses) {
+    return res.status(500).send({
+      error: 'One of the properties required to create a plate has not been defined', // /////////MIRAR ERRORES
+    });
+  }
+  const arrayCourses: CourseInterface[] = [];
+  for (let i: number = 0; i < menuObject.courses.length; i++) {
+    const filter = {name: menuObject.courses[i]};
+    const courseCorrect = await Course.findOne(filter);
+    if (courseCorrect != null) {
+      arrayCourses.push(courseCorrect);
+    } else {
+      return res.status(500).send({
+        error: 'An course is not found in the database',
+      });
+    }
+  }
+
+  const macronutrients = nutritionalComposition(arrayCourses);
+  const menuCorrectly = {
+    name: menuObject.name,
+    carboHydrates: macronutrients[0],
+    proteins: macronutrients[1],
+    lipids: macronutrients[2],
+    courses: arrayCourses,
+    foodGroupList: getFoodList(arrayCourses),
+    price: calculatePrice(arrayCourses),
+  };
+
+  try {
+    const menu = new Menu(menuCorrectly);
+    await menu.save();
+    return res.status(201).send(menu);
+  } catch (error) {
+    return res.status(400).send(error);
+  }
+});

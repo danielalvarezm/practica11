@@ -1,33 +1,16 @@
 import {Document, Schema, model} from 'mongoose';
-// import {CourseSchema, CourseInterface} from './coursesModel'
+import {foodGroup} from './ingredientsModel';
 
-interface MenuInterface extends Document {
-    name: string,
-    carboHydrates: number,
-    proteins: number,
-    lipids: number,
-    cources: [{
-        name: string,
-        carboHydrates: number,
-        proteins: number,
-        lipids: number,
-        groupFood: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
-        price: number,
-        ingredients: [{
-            "ingredient": {
-            "name": string,
-            "location": string,
-            "carboHydrates": number,
-            "proteins": number,
-            "lipids": number,
-            "price": number,
-            "type": 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
-            },
-            "quantity": number
-        }],
-        type: 'Starter' | 'First' | 'Second' | 'Dessert',
-    }]
-    price: number
+export interface MenuInterface extends Document {
+  name: string,
+  carboHydrates: number,
+  proteins: number,
+  lipids: number,
+  courses: [{
+    id_: string,
+  }],
+  foodGroupList: foodGroup[],
+  price: number
 }
 
 const MenuSchema = new Schema({
@@ -51,36 +34,14 @@ const MenuSchema = new Schema({
   },
   courses: {
     type: [{
-        name: String,
-        carboHydrates: Number,
-        proteins: Number,
-        lipids: Number,
-        groupFood: {
-            type: String,
-            enum: ['Proteins', 'Vegetables', 'Dairy', 'Cereals', 'Fruits'],
-        },
-        price: Number,
-        "ingredients": [{
-            "ingredient": {
-              "name": String,
-              "location": String,
-              "carboHydrates": Number,
-              "proteins": Number,
-              "lipids": Number,
-              "price": Number,
-              "type": {
-                  type: String,
-                  enum: ['Proteins', 'Vegetables', 'Dairy', 'Cereals', 'Fruits'],
-              },
-            },
-            quantity: Number
-        }],
-        "type": {
-            type: String,
-            enum: ['Proteins', 'Vegetables', 'Dairy', 'Cereals', 'Fruits'],
-        },
+      type: Schema.Types.ObjectId,
+      ref: 'Courses',
     }],
-    requiered: true,
+    required: true,
+  },
+  foodGroupList: {
+    type: [String],
+    required: true, //mirar como validar que son todos foodGroup
   },
   price: {
     type: Number,
@@ -88,4 +49,4 @@ const MenuSchema = new Schema({
   },
 });
 
-export const Menu = model<MenuInterface>('Menu', MenuSchema); 
+export const Menu = model<MenuInterface>('Menu', MenuSchema);

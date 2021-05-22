@@ -1,7 +1,9 @@
 import * as express from 'express';
-import {Course} from '../models/coursesModel';
+import {Course, CourseInterface} from '../models/coursesModel';
 import {calculateMacronutrients, predominantGroup, totalPrice} from '../courses';
 import {Ingredient, IngredientInterface} from '../models/ingredientsModel';
+import { nutritionalComposition, getFoodList, calculatePrice } from '../menus';
+import { Menu } from '../models/menusModel';
 import '../db/mongoose';
 
 export const patchRouter = express.Router();
@@ -68,80 +70,140 @@ patchRouter.patch('/ingredients/:id', async (req, res) => {
     }
 });
 
-  // Courses by name
-  patchRouter.patch('/courses', async (req, res) => {
-    console.log('hola');
-    if (!req.query.name) {
-      console.log('hola1');
+// Courses by name
+patchRouter.patch('/courses', async (req, res) => {
+  if (!req.query.name) {
+    return res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    const allowedUpdates = ['name', 'ingredients', 'quantity', 'type'];
+    const actualUpdates = Object.keys(req.body);
+    const isValidUpdate =
+      actualUpdates.every((update) => allowedUpdates.includes(update));
+
+    if (!isValidUpdate) {
       return res.status(400).send({
-        error: 'A name must be provided',
+        error: 'Update is not permitted',
       });
     } else {
-      console.log('hola2');
-      const allowedUpdates = ['name', 'ingredients', 'quantity', 'type'];
-      const actualUpdates = Object.keys(req.body);
-      console.log(actualUpdates);
-      const isValidUpdate =
-        actualUpdates.every((update) => allowedUpdates.includes(update));
-  
-      if (!isValidUpdate) {
-        return res.status(400).send({
-          error: 'Update is not permitted',
+      const courseObject = req.body;
+      if ((courseObject.ingredients && !courseObject.quantity) ||
+      (!courseObject.ingredients && courseObject.quantity)) {
+        return res.status(500).send({
+          error: 'PARAMETROS', // //// CAMBIAR ERRRRRRRRRROR
         });
-      } else {
-        const courseObject = req.body;
-        if ((courseObject.ingredients && !courseObject.quantity) ||
-        (!courseObject.ingredients && courseObject.quantity)) {
+      }
+      if (courseObject.ingredients) {
+        if (courseObject.ingredients.length != courseObject.quantity.length) {
           return res.status(500).send({
             error: 'PARAMETROS', // //// CAMBIAR ERRRRRRRRRROR
           });
         }
-        if (courseObject.ingredients) {
-          if (courseObject.ingredients.length != courseObject.quantity.length) {
-            return res.status(500).send({
-              error: 'PARAMETROS', // //// CAMBIAR ERRRRRRRRRROR
-            });
-          }
-          const arrayIngredients: IngredientInterface[] = [];
-          for (let i: number = 0; i < courseObject.ingredients.length; i++) {
-            const filter = {name: courseObject.ingredients[i]};
-            const ingredientCorrect = await Ingredient.findOne(filter);
-            if (ingredientCorrect != null) {
-              arrayIngredients.push(ingredientCorrect);
-            } else {
-              return res.status(500).send({
-                error: 'An ingredient is not found in the database',
-              });
-            }
-          }
-          const macronutrients = calculateMacronutrients(arrayIngredients, courseObject.quantity);
-          const newData = {
-            carboHydrates: macronutrients[0],
-            proteins: macronutrients[1],
-            lipids: macronutrients[2],
-            groupFood: predominantGroup(arrayIngredients),
-            price: totalPrice(arrayIngredients, courseObject.quantity),
-            ingredients: arrayIngredients,
-          };
-          Object.assign(courseObject, newData);
-        }
-
-        try {
-          const course = await Course.findOneAndUpdate({name: req.query.name.toString()}, courseObject, {
-            new: true,
-            runValidators: true,
-          });
-
-          if (course === null) {
-            return res.status(404).send({
-              error: 'Update is not permitted',
-            });
+        const arrayIngredients: IngredientInterface[] = [];
+        for (let i: number = 0; i < courseObject.ingredients.length; i++) {
+          const filter = {name: courseObject.ingredients[i]};
+          const ingredientCorrect = await Ingredient.findOne(filter);
+          if (ingredientCorrect != null) {
+            arrayIngredients.push(ingredientCorrect);
           } else {
-            return res.send(course);
+            return res.status(500).send({
+              error: 'An ingredient is not found in the database',
+            });
           }
-        }  catch (error)  {
-          return res.status(400).send(error);
         }
+        const macronutrients = calculateMacronutrients(arrayIngredients, courseObject.quantity);
+        const newData = {
+          carboHydrates: macronutrients[0],
+          proteins: macronutrients[1],
+          lipids: macronutrients[2],
+          groupFood: predominantGroup(arrayIngredients),
+          price: totalPrice(arrayIngredients, courseObject.quantity),
+          ingredients: arrayIngredients,
+        };
+        Object.assign(courseObject, newData);
+      }
+
+      try {
+        const course = await Course.findOneAndUpdate({name: req.query.name.toString()}, courseObject, {
+          new: true,
+          runValidators: true,
+        });
+
+        if (course === null) {
+          return res.status(404).send({
+            error: 'Update is not permitted',
+          });
+        } else {
+          return res.send(course);
+        }
+      }  catch (error)  {
+        return res.status(400).send(error);
       }
     }
-  });
+  }
+});
+
+// Menus by name
+patchRouter.patch('/menus', async (req, res) => {
+  if (!req.query.name) {
+    return res.status(400).send({
+      error: 'A name must be provided',
+    });
+  } else {
+    const allowedUpdates = ['name', 'courses'];
+    const actualUpdates = Object.keys(req.body);
+    const isValidUpdate =
+      actualUpdates.every((update) => allowedUpdates.includes(update));
+
+    if (!isValidUpdate) {
+      return res.status(400).send({
+        error: 'Update is not permitted',
+      });
+    } else {
+      const menuObject = req.body;
+      if (menuObject.courses) {
+        const arrayCourses: CourseInterface[] = [];
+        for (let i: number = 0; i < menuObject.courses.length; i++) {
+          const filter = {name: menuObject.courses[i]};
+          const courseCorrect = await Course.findOne(filter);
+          if (courseCorrect != null) {
+            arrayCourses.push(courseCorrect);
+          } else {
+            return res.status(500).send({
+              error: 'A course is not found in the database',
+            });
+          }
+        }
+        const macronutrients = nutritionalComposition(arrayCourses);
+        const newData = {
+          carboHydrates: macronutrients[0],
+          proteins: macronutrients[1],
+          lipids: macronutrients[2],
+          courses: arrayCourses,
+          foodGroupList: getFoodList(arrayCourses),
+          price: calculatePrice(arrayCourses),
+        };
+        Object.assign(menuObject, newData);
+      }
+
+      try {
+        const menu = await Menu.findOneAndUpdate({name: req.query.name.toString()}, menuObject, {
+          new: true,
+          runValidators: true,
+        });
+
+        if (!menu) {
+          return res.status(404).send({
+            error: 'Update is not permitted',
+          });
+        } else {
+          return res.send(menu);
+        }
+
+      } catch (error) {
+        return res.status(400).send(error);
+      }
+    }
+  }
+});
