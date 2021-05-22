@@ -74,7 +74,7 @@ deleteRouter.delete('/menus', async (req, res) => {
     const menu = await Menu.findOneAndDelete({name: req.query.name.toString()});
     if (!menu) {
       return res.status(404).send({
-        error: 'Delete is not permitted',
+        error: 'The menu has not been found',
       });
     }
     return res.send(menu);
