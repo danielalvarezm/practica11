@@ -37,8 +37,8 @@ app.get('/ingredient', (req, res) => {
     } else {
       res.status(404).send();
     }
-  }).catch(() => {
-    res.status(500).send();
+  }).catch((error) => {
+    res.status(500).send(error);
   });
 });
 
@@ -51,8 +51,8 @@ app.get('/ingredient/:id', (req, res) => {
     } else {
       res.send(ingredient);
     }
-  }).catch(() => {
-    res.status(500).send();
+  }).catch((error) => {
+    res.status(500).send(error);
   });
 });
 
@@ -132,8 +132,8 @@ app.delete('/ingredient', (req, res) => {
       } else {
         res.send(ingredient);
       }
-    }).catch(() => {
-      res.status(400).send();
+    }).catch((error) => {
+      res.status(400).send(error);
     });
   }
 });
@@ -147,8 +147,8 @@ app.delete('/ingredient/:id', (req, res) => {
     } else {
       res.send(ingredient);
     }
-  }).catch(() => {
-    res.status(400).send();
+  }).catch((error) => {
+    res.status(400).send(error);
   });
 });
 

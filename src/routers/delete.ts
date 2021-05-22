@@ -6,7 +6,7 @@ import '../db/mongoose';
 export const deleteRouter = express.Router();
 
 // Ingredients by name
-deleteRouter.delete('/ingredient', async (req, res) => {
+deleteRouter.delete('/ingredients', async (req, res) => {
   if(!req.query.name) {
     return res.status(400).send({
       error: 'A name must be provided',
@@ -27,7 +27,7 @@ deleteRouter.delete('/ingredient', async (req, res) => {
 });
 
 // Ingredients by ID
-deleteRouter.delete('/ingredient/:id', async (req, res) => {
+deleteRouter.delete('/ingredients/:id', async (req, res) => {
   try {
     const ingredient = await Ingredient.findByIdAndDelete(req.params.id);
     if (!ingredient) {
@@ -36,12 +36,12 @@ deleteRouter.delete('/ingredient/:id', async (req, res) => {
     return res.send(ingredient);
       
   } catch (error) {
-    return res.status(400).send();
+    return res.status(400).send(error);
   }
 });
 
 // Courses by name
-deleteRouter.delete('/course', async(req, res) => {
+deleteRouter.delete('/courses', async(req, res) => {
   if(!req.query.name) {
     return res.status(400).send({
       error: 'A name must be provided',
@@ -52,11 +52,13 @@ deleteRouter.delete('/course', async(req, res) => {
     const course = await Course.findOneAndDelete({name: req.query.name.toString()});
 
     if(!course) {
-      return res.status(404).send();
+      return res.status(404).send({
+        error: 'Delete is not permitted',
+      });
     }
 
     return res.send(course);
   } catch (error) {
-    return res.status(400).send();
+    return res.status(400).send(error);
   }
 });

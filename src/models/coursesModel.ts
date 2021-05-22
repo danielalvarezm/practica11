@@ -1,7 +1,7 @@
 import {Document, Schema, model} from 'mongoose';
-// import {foodGroup} from './ingredientsModel';
+// import {IngredientInterface, IngredientSchema} from './ingredientsModel';
 
-export interface CourseInterface extends Document {
+interface CourseInterface extends Document {
   name: string,
   carboHydrates: number,
   proteins: number,
@@ -9,21 +9,13 @@ export interface CourseInterface extends Document {
   groupFood: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
   price: number,
   ingredients: [{
-    "ingredient": {
-      "name": string,
-      "location": string,
-      "carboHydrates": number,
-      "proteins": number,
-      "lipids": number,
-      "price": number,
-      "type": 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
-    },
-    "quantity": number
+    id_: string,
   }],
+  quantity: number[],
   type: 'Starter' | 'First' | 'Second' | 'Dessert',
 }
 
-export const CourseSchema = new Schema({
+const CourseSchema = new Schema({
   name: {
     type: String,
     unique: true,
@@ -54,20 +46,14 @@ export const CourseSchema = new Schema({
   },
   ingredients: {
     type: [{
-      "ingredient": {
-        "name": String,
-        "location": String,
-        "carboHydrates": Number,
-        "proteins": Number,
-        "lipids": Number,
-        "price": Number,
-        "type": {
-          type: String,
-          enum: ['Proteins', 'Vegetables', 'Dairy', 'Cereals', 'Fruits'],
-        },
-      },
-      "quantity": Number,
+      type: Schema.Types.ObjectId,
+      ref: 'Ingredient',
     }],
+    required: true,
+  },
+  quantity: {
+    type: [Number],
+    required: true,
   },
   type: {
     type: String,

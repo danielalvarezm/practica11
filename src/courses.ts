@@ -1,40 +1,46 @@
-import {foodGroup} from './models/ingredientsModel';
+import {foodGroup, IngredientInterface} from './models/ingredientsModel';
 
-interface CourseEntry {
+export interface CourseEntry {
     name: string,
-    ingredients: [{
-      ingredient: {
-        "name": string,
-        "location": string,
-        "carboHydrates": number,
-        "proteins": number,
-        "lipids": number,
-        "price": number,
-        "type": foodGroup
-      },
-      quantity: number
-    }],
+    ingredients: IngredientInterface[],
+    quantity: number[],
     type: 'Starter' | 'First' | 'Second' | 'Dessert'
 };
 
-export function loadDataCourse(data: CourseEntry) {
-  // //// Nutritional composition
-  let carboHydrates: number = 0;
-  let proteins: number = 0;
-  let lipids: number = 0;
+export function loadDataCourse(data: CourseEntry) { // //////////// MIRAR LA UTITLIDAD DE ESTA FUNCION
+  const macronutrients = calculateMacronutrients(data.ingredients, data.quantity);
 
-  data.ingredients.forEach((element) => {
-    carboHydrates += (element.ingredient.carboHydrates / 100) * element.quantity;
-    proteins += (element.ingredient.proteins / 100) * element.quantity;
-    lipids += (element.ingredient.lipids / 100) * element.quantity;
-  });
+  return {
+    name: data.name,
+    carboHydrates: macronutrients[0],
+    proteins: macronutrients[1],
+    lipids: macronutrients[2],
+    groupFood: predominantGroup(data.ingredients),
+    price: totalPrice(data.ingredients, data.quantity),
+    ingredients: data.ingredients,
+    quantity: data.quantity,
+    type: data.type,
+  };
+}
 
-  // ////// Predominant group
+export function calculateMacronutrients(ingredients: IngredientInterface[], quantity: number[]): number[] {
+  const result: number[] = [0, 0, 0];
+
+  for (let i: number = 0; i < ingredients.length; i++) {
+    result[0] += (ingredients[i].carboHydrates / 100) * quantity[i];
+    result[1] += (ingredients[i].proteins / 100) * quantity[i];
+    result[2] += (ingredients[i].lipids / 100) * quantity[i];
+  }
+
+  return result;
+}
+
+export function predominantGroup(ingredients: IngredientInterface[]): foodGroup {
   const counter = new Map<foodGroup, number>();
   let group: foodGroup;
 
-  data.ingredients.forEach((element) => {
-    group = element.ingredient.type;
+  ingredients.forEach((element) => {
+    group = element.type;
     if (counter.has(group)) {
       counter.set(group, Number(counter.get(group)) + 1);
     } else {
@@ -50,21 +56,30 @@ export function loadDataCourse(data: CourseEntry) {
       maxGroup = group;
     }
   });
-
-  // ////////////////// Calculte price
-  let totalPrice: number = 0;
-  data.ingredients.forEach((element) => {
-    totalPrice += (element.ingredient.price / 1000) * element.quantity;
-  });
-
-  return {
-    name: data.name,
-    carboHydrates: carboHydrates,
-    proteins: proteins,
-    lipids: lipids,
-    groupFood: maxGroup,
-    price: totalPrice,
-    ingredients: data.ingredients,
-    type: data.type,
-  };
+  return maxGroup;
 }
+
+export function totalPrice(ingredients: IngredientInterface[], quantity: number[]): number {
+  let totalPrice: number = 0;
+  for (let i: number = 0; i < ingredients.length; i++) {
+    totalPrice += (ingredients[i].price / 1000) * quantity[i];
+  }
+  return totalPrice;
+}
+
+
+/*
+export function getIngredients(ingredients: string[]): IngredientInterface[] {
+  const arrayIngredients: IngredientInterface[] = [];
+  ingredients.forEach(async (element) => {
+    const filter = {name: element};
+    const ingredientCorrect = await Ingredient.findOne(filter);
+    if (ingredientCorrect != null) {
+      arrayIngredients.push(ingredientCorrect);
+      console.log(arrayIngredients);
+    } else {
+      throw new Error('Error');
+    }
+  });
+  return arrayIngredients;
+};*/
