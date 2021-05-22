@@ -1,5 +1,23 @@
-import {CourseInterface} from '../models/coursesModel';
+import {CourseInterface, plateCategory} from '../models/coursesModel';
 import {foodGroup} from '../models/ingredientsModel';
+
+export function validate(menu: CourseInterface[]): boolean {
+  if (menu.length < 3) {
+    return false;
+  }
+  console.log(menu);
+  let group: plateCategory[] = [];
+  menu.forEach((element) => {
+    group.push(element.type);
+  });
+  group = group.filter((elem, index, self) => {
+    return index === self.indexOf(elem);
+  });
+  if (group.length < 3) {
+    return false;
+  }
+  return true;
+}
 
 export function nutritionalComposition(courses: CourseInterface[]): number[] {
   const result: number[] = [0, 0, 0];

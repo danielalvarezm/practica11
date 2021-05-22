@@ -1,7 +1,5 @@
 import {connect} from 'mongoose';
-/**
- * MongoDB server connection
- */
+
 connect('mongodb://127.0.0.1:27017/nutritional-information', {
   useNewUrlParser: true,
   useUnifiedTopology: true,

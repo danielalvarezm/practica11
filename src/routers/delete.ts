@@ -16,9 +16,13 @@ deleteRouter.delete('/ingredients', async (req, res) => {
 
   try {
     const ingredient = await Ingredient.findOneAndDelete({name: req.query.name.toString()});
+
     if (!ingredient) {
-      return res.status(404).send();
+      return res.status(404).send({
+        error: 'The ingredient has not been found',
+      });
     }
+
     return res.send(ingredient);
   } catch (error) {
     return res.status(400).send();
@@ -50,7 +54,7 @@ deleteRouter.delete('/courses', async (req, res) => {
     const course = await Course.findOneAndDelete({name: req.query.name.toString()});
     if (!course) {
       return res.status(404).send({
-        error: 'Delete is not permitted',
+        error: 'The course has not been found',
       });
     }
     return res.send(course);

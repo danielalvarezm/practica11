@@ -27,18 +27,38 @@ export const IngredientSchema = new Schema({
   carboHydrates: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Carbohydrates must be a positive number');
+      }
+    },
   },
   proteins: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Proteins must be a positive number');
+      }
+    },
   },
   lipids: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Lipids must be a positive number');
+      }
+    },
   },
   price: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('The price must be a positive number');
+      }
+    },
   },
   type: {
     type: String,

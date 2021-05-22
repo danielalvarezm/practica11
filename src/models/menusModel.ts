@@ -1,11 +1,6 @@
 import {Document, Schema, model} from 'mongoose';
-import {CourseInterface, plateCategory} from './coursesModel';
 import {foodGroup} from './ingredientsModel';
 
-/**
- * @interface IngredientInterface Interface that inherits from the Document class of the mongoose module,
- * this allows us to define what form our documents will take
- */
 export interface MenuInterface extends Document {
   name: string,
   carboHydrates: number,
@@ -28,14 +23,29 @@ const MenuSchema = new Schema({
   carboHydrates: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Carbohydrates must be a positive number');
+      }
+    },
   },
   proteins: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Proteins must be a positive number');
+      }
+    },
   },
   lipids: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Lipids must be a positive number');
+      }
+    },
   },
   courses: {
     type: [{
@@ -43,27 +53,24 @@ const MenuSchema = new Schema({
       ref: 'Course',
     }],
     required: true,
-    validate: (menu: CourseInterface[]) => {
-      if (menu.length < 3) {
-        throw new Error('Courses\' minimum amount is 3');
-      }
-      let group: plateCategory[] = [];
-      menu.forEach((element) => {
-        group.push(element.type);
-      });
-      group = group.filter((elem, index, self) => {
-        return index === self.indexOf(elem);
-      });
-      if (group.length < 3) throw new Error('There must be at least 3 differents courses categories');
-    },
   },
   foodGroupList: {
     type: [String],
     required: true,
+    validate: (list: string[]) => {
+      if (list.length == 0) {
+        throw new Error('The food group list must have at least one item');
+      }
+    },
   },
   price: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('The price must be a positive number');
+      }
+    },
   },
 });
 

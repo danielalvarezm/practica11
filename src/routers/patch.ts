@@ -2,7 +2,7 @@ import * as express from 'express';
 import {Course, CourseInterface} from '../models/coursesModel';
 import {calculateMacronutrients, predominantGroup, totalPrice} from '../utilities/courses';
 import {Ingredient, IngredientInterface} from '../models/ingredientsModel';
-import {nutritionalComposition, getFoodList, calculatePrice} from '../utilities/menus';
+import {nutritionalComposition, getFoodList, calculatePrice, validate} from '../utilities/menus';
 import {Menu} from '../models/menusModel';
 import '../db/mongoose';
 
@@ -32,7 +32,9 @@ patchRouter.patch('/ingredients', async (req, res) => {
     });
 
     if (!ingredient) {
-      return res.status(404).send();
+      return res.status(404).send({
+        error: 'The ingredient has not been found',
+      });
     }
 
     return res.send(ingredient);
@@ -59,7 +61,9 @@ patchRouter.patch('/ingredients/:id', async (req, res) => {
       runValidators: true,
     });
     if (!ingredient) {
-      return res.status(404).send();
+      return res.status(404).send({
+        error: 'The ingredient has not been found',
+      });
     } else {
       return res.send(ingredient);
     }
@@ -88,24 +92,24 @@ patchRouter.patch('/courses', async (req, res) => {
       const courseObject = req.body;
       if ((courseObject.ingredients && !courseObject.quantity) ||
       (!courseObject.ingredients && courseObject.quantity)) {
-        return res.status(500).send({
+        return res.status(400).send({
           error: 'Parameters are missing. Ingredients and their quantities must be specified',
         });
       }
       if (courseObject.ingredients) {
         if (courseObject.ingredients.length != courseObject.quantity.length) {
-          return res.status(500).send({
-            error: 'There must be the same quantity of ingredients as quantities',
+          return res.status(400).send({
+            error: 'The size of the ingredient and quantity array must be the same',
           });
         }
         const arrayIngredients: IngredientInterface[] = [];
         for (let i: number = 0; i < courseObject.ingredients.length; i++) {
           const filter = {name: courseObject.ingredients[i]};
-          const ingredientCorrect = await Ingredient.findOne(filter);
-          if (ingredientCorrect != null) {
-            arrayIngredients.push(ingredientCorrect);
+          const correctIngredient = await Ingredient.findOne(filter);
+          if (correctIngredient != null) {
+            arrayIngredients.push(correctIngredient);
           } else {
-            return res.status(500).send({
+            return res.status(404).send({
               error: 'An ingredient is not found in the database',
             });
           }
@@ -130,7 +134,7 @@ patchRouter.patch('/courses', async (req, res) => {
 
         if (course === null) {
           return res.status(404).send({
-            error: 'Update is not permitted',
+            error: 'The course has not been found',
           });
         } else {
           return res.send(course);
@@ -168,11 +172,18 @@ patchRouter.patch('/menus', async (req, res) => {
           if (courseCorrect != null) {
             arrayCourses.push(courseCorrect);
           } else {
-            return res.status(500).send({
+            return res.status(404).send({
               error: 'A course is not found in the database',
             });
           }
         }
+
+        if (!validate(arrayCourses)) {
+          return res.status(400).send({
+            error: 'A menu must include one course from each category or at least three of them',
+          });
+        }
+
         const macronutrients = nutritionalComposition(arrayCourses);
         const newData = {
           carboHydrates: macronutrients[0],
@@ -188,12 +199,10 @@ patchRouter.patch('/menus', async (req, res) => {
       try {
         const menu = await Menu.findOneAndUpdate({name: req.query.name.toString()}, menuObject, {
           new: true,
-          runValidators: true,
         });
-
-        if (!menu) {
+        if (menu === null) {
           return res.status(404).send({
-            error: 'Update is not permitted',
+            error: 'The menu has not been found',
           });
         } else {
           return res.send(menu);

@@ -1,28 +1,5 @@
 import {foodGroup, IngredientInterface} from '../models/ingredientsModel';
 
-export interface CourseEntry {
-    name: string,
-    ingredients: IngredientInterface[],
-    quantity: number[],
-    type: 'Starter' | 'First' | 'Second' | 'Dessert'
-};
-
-export function loadDataCourse(data: CourseEntry) { // //////////// MIRAR LA UTITLIDAD DE ESTA FUNCION
-  const macronutrients = calculateMacronutrients(data.ingredients, data.quantity);
-
-  return {
-    name: data.name,
-    carboHydrates: macronutrients[0],
-    proteins: macronutrients[1],
-    lipids: macronutrients[2],
-    groupFood: predominantGroup(data.ingredients),
-    price: totalPrice(data.ingredients, data.quantity),
-    ingredients: data.ingredients,
-    quantity: data.quantity,
-    type: data.type,
-  };
-}
-
 export function calculateMacronutrients(ingredients: IngredientInterface[], quantity: number[]): number[] {
   const result: number[] = [0, 0, 0];
 
@@ -66,20 +43,3 @@ export function totalPrice(ingredients: IngredientInterface[], quantity: number[
   }
   return totalPrice;
 }
-
-
-/*
-export function getIngredients(ingredients: string[]): IngredientInterface[] {
-  const arrayIngredients: IngredientInterface[] = [];
-  ingredients.forEach(async (element) => {
-    const filter = {name: element};
-    const ingredientCorrect = await Ingredient.findOne(filter);
-    if (ingredientCorrect != null) {
-      arrayIngredients.push(ingredientCorrect);
-      console.log(arrayIngredients);
-    } else {
-      throw new Error('Error');
-    }
-  });
-  return arrayIngredients;
-};*/

@@ -1,14 +1,13 @@
 import * as express from 'express';
 import {Course, CourseInterface} from '../models/coursesModel';
 import {Ingredient, IngredientInterface} from '../models/ingredientsModel';
-import {loadDataCourse} from '../utilities/courses';
-import {nutritionalComposition, getFoodList, calculatePrice} from '../utilities/menus';
+import {calculateMacronutrients, predominantGroup, totalPrice} from '../utilities/courses';
+import {nutritionalComposition, getFoodList, calculatePrice, validate} from '../utilities/menus';
 import {Menu} from '../models/menusModel';
 import '../db/mongoose';
 
 export const postRouter = express.Router();
 
-// Ingredients
 postRouter.post('/ingredients', async (req, res) => {
   const ingredient = new Ingredient(req.body);
   try {
@@ -19,37 +18,43 @@ postRouter.post('/ingredients', async (req, res) => {
   }
 });
 
-// Courses
 postRouter.post('/courses', async (req, res) => {
   const courseObject = req.body;
   if (!courseObject.name || !courseObject.ingredients || !courseObject.quantity || !courseObject.type ||
       courseObject.ingredients.length != courseObject.quantity.length) {
-    return res.status(500).send({
+    return res.status(400).send({
       error: 'All courses\' properties must be included. Also the number of ingredients and quantity must be the same',
     });
   }
+
   const arrayIngredients: IngredientInterface[] = [];
   for (let i: number = 0; i < courseObject.ingredients.length; i++) {
     const filter = {name: courseObject.ingredients[i]};
-    const ingredientCorrect = await Ingredient.findOne(filter);
-    if (ingredientCorrect != null) {
-      arrayIngredients.push(ingredientCorrect);
+    const correctIngredient = await Ingredient.findOne(filter);
+    if (correctIngredient != null) {
+      arrayIngredients.push(correctIngredient);
     } else {
-      return res.status(500).send({
+      return res.status(404).send({
         error: 'An ingredient is not found in the database',
       });
     }
   }
 
-  const courseCorrectly = {
+  const macronutrients = calculateMacronutrients(arrayIngredients, courseObject.quantity);
+  const correctCourse = {
     name: courseObject.name,
+    carboHydrates: macronutrients[0],
+    proteins: macronutrients[1],
+    lipids: macronutrients[2],
+    groupFood: predominantGroup(arrayIngredients),
+    price: totalPrice(arrayIngredients, courseObject.quantity),
     ingredients: arrayIngredients,
     quantity: courseObject.quantity,
     type: courseObject.type,
   };
 
   try {
-    const course = new Course(loadDataCourse(courseCorrectly));
+    const course = new Course(correctCourse);
     await course.save();
     return res.status(201).send(course);
   } catch (error) {
@@ -57,12 +62,12 @@ postRouter.post('/courses', async (req, res) => {
   }
 });
 
-// Menus by name
+
 postRouter.post('/menus', async (req, res) => {
   const menuObject = req.body;
   if (!menuObject.name || !menuObject.courses) {
-    return res.status(500).send({
-      error: 'One of the properties required to create a plate has not been defined',
+    return res.status(400).send({
+      error: 'One of the properties required to create a menu has not been defined',
     });
   }
   const arrayCourses: CourseInterface[] = [];
@@ -72,14 +77,20 @@ postRouter.post('/menus', async (req, res) => {
     if (courseCorrect != null) {
       arrayCourses.push(courseCorrect);
     } else {
-      return res.status(500).send({
+      return res.status(404).send({
         error: 'An course is not found in the database',
       });
     }
   }
 
+  if (!validate(arrayCourses)) {
+    return res.status(400).send({
+      error: 'A menu must include one course from each category or at least three of them',
+    });
+  }
+
   const macronutrients = nutritionalComposition(arrayCourses);
-  const menuCorrectly = {
+  const correctMenu = {
     name: menuObject.name,
     carboHydrates: macronutrients[0],
     proteins: macronutrients[1],
@@ -90,7 +101,7 @@ postRouter.post('/menus', async (req, res) => {
   };
 
   try {
-    const menu = new Menu(menuCorrectly);
+    const menu = new Menu(correctMenu);
     await menu.save();
     return res.status(201).send(menu);
   } catch (error) {

@@ -1,18 +1,13 @@
 import {Document, Schema, model} from 'mongoose';
-// import {IngredientInterface, IngredientSchema} from './ingredientsModel';
 
 export type plateCategory = 'Starter' | 'First' | 'Second' | 'Dessert';
 
-/**
- * @interface IngredientInterface Interface that inherits from the Document class of the mongoose module,
- * this allows us to define what form our documents will take
- */
 export interface CourseInterface extends Document {
   name: string,
   carboHydrates: number,
   proteins: number,
   lipids: number,
-  groupFood: 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits',
+  groupFood: 'Proteins' | 'Vegetables' | 'Dairy' | 'Cereals' | 'Fruits',
   price: number,
   ingredients: [{
     id_: string,
@@ -31,14 +26,29 @@ export const CourseSchema = new Schema({
   carboHydrates: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Carbohydrates must be a positive number');
+      }
+    },
   },
   proteins: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Proteins must be a positive number');
+      }
+    },
   },
   lipids: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('Lipids must be a positive number');
+      }
+    },
   },
   groupFood: {
     type: String,
@@ -49,8 +59,13 @@ export const CourseSchema = new Schema({
   price: {
     type: Number,
     required: true,
+    validate: (value: number) => {
+      if (value < 0) {
+        throw new Error('The price must be a positive number');
+      }
+    },
   },
-  ingredients: { // SE PERMITE EL VACIO?
+  ingredients: {
     type: [{
       type: Schema.Types.ObjectId,
       ref: 'Ingredient',
