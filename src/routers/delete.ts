@@ -8,7 +8,7 @@ export const deleteRouter = express.Router();
 
 // Ingredients by name
 deleteRouter.delete('/ingredients', async (req, res) => {
-  if(!req.query.name) {
+  if (!req.query.name) {
     return res.status(400).send({
       error: 'A name must be provided',
     });
@@ -16,11 +16,9 @@ deleteRouter.delete('/ingredients', async (req, res) => {
 
   try {
     const ingredient = await Ingredient.findOneAndDelete({name: req.query.name.toString()});
-
-    if(!ingredient) {
+    if (!ingredient) {
       return res.status(404).send();
     }
-
     return res.send(ingredient);
   } catch (error) {
     return res.status(400).send();
@@ -33,9 +31,8 @@ deleteRouter.delete('/ingredients/:id', async (req, res) => {
     const ingredient = await Ingredient.findByIdAndDelete(req.params.id);
     if (!ingredient) {
       return res.status(404).send();
-    } 
+    }
     return res.send(ingredient);
-      
   } catch (error) {
     return res.status(400).send(error);
   }
@@ -43,7 +40,7 @@ deleteRouter.delete('/ingredients/:id', async (req, res) => {
 
 // Courses by name
 deleteRouter.delete('/courses', async (req, res) => {
-  if(!req.query.name) {
+  if (!req.query.name) {
     return res.status(400).send({
       error: 'A name must be provided',
     });
@@ -51,13 +48,11 @@ deleteRouter.delete('/courses', async (req, res) => {
 
   try {
     const course = await Course.findOneAndDelete({name: req.query.name.toString()});
-
-    if(!course) {
+    if (!course) {
       return res.status(404).send({
         error: 'Delete is not permitted',
       });
     }
-
     return res.send(course);
   } catch (error) {
     return res.status(400).send(error);
@@ -70,17 +65,15 @@ deleteRouter.delete('/menus', async (req, res) => {
     return res.status(400).send({
       error: 'A name must be provided',
     });
-  } 
+  }
   try {
     const menu = await Menu.findOneAndDelete({name: req.query.name.toString()});
-
     if (!menu) {
       return res.status(404).send({
         error: 'Delete is not permitted',
       });
-    } 
-      
-    return res.send(menu); 
+    }
+    return res.send(menu);
   } catch (error) {
     return res.status(400).send(error);
   }

@@ -1,5 +1,5 @@
-import {CourseInterface} from './models/coursesModel';
-import {foodGroup} from './models/ingredientsModel';
+import {CourseInterface} from '../models/coursesModel';
+import {foodGroup} from '../models/ingredientsModel';
 
 export function nutritionalComposition(courses: CourseInterface[]): number[] {
   const result: number[] = [0, 0, 0];

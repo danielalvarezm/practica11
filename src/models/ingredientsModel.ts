@@ -1,6 +1,6 @@
 import {Document, Schema, model} from 'mongoose';
 
-export type foodGroup = 'Proteins'|'Vegetables'|'Dairy'|'Cereals'|'Fruits';
+export type foodGroup = 'Proteins' | 'Vegetables' | 'Dairy' | 'Cereals' | 'Fruits';
 
 export interface IngredientInterface extends Document {
   name: string,

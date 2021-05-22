@@ -1,4 +1,4 @@
-import {foodGroup, IngredientInterface} from './models/ingredientsModel';
+import {foodGroup, IngredientInterface} from '../models/ingredientsModel';
 
 export interface CourseEntry {
     name: string,

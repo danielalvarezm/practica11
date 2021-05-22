@@ -1,6 +1,12 @@
 import {Document, Schema, model} from 'mongoose';
 // import {IngredientInterface, IngredientSchema} from './ingredientsModel';
 
+export type plateCategory = 'Starter' | 'First' | 'Second' | 'Dessert';
+
+/**
+ * @interface IngredientInterface Interface that inherits from the Document class of the mongoose module,
+ * this allows us to define what form our documents will take
+ */
 export interface CourseInterface extends Document {
   name: string,
   carboHydrates: number,
@@ -12,7 +18,7 @@ export interface CourseInterface extends Document {
     id_: string,
   }],
   quantity: number[],
-  type: 'Starter' | 'First' | 'Second' | 'Dessert',
+  type: plateCategory,
 }
 
 export const CourseSchema = new Schema({
@@ -44,7 +50,7 @@ export const CourseSchema = new Schema({
     type: Number,
     required: true,
   },
-  ingredients: {
+  ingredients: { // SE PERMITE EL VACIO?
     type: [{
       type: Schema.Types.ObjectId,
       ref: 'Ingredient',

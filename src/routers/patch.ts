@@ -1,9 +1,9 @@
 import * as express from 'express';
 import {Course, CourseInterface} from '../models/coursesModel';
-import {calculateMacronutrients, predominantGroup, totalPrice} from '../courses';
+import {calculateMacronutrients, predominantGroup, totalPrice} from '../utilities/courses';
 import {Ingredient, IngredientInterface} from '../models/ingredientsModel';
-import { nutritionalComposition, getFoodList, calculatePrice } from '../menus';
-import { Menu } from '../models/menusModel';
+import {nutritionalComposition, getFoodList, calculatePrice} from '../utilities/menus';
+import {Menu} from '../models/menusModel';
 import '../db/mongoose';
 
 export const patchRouter = express.Router();
@@ -14,60 +14,58 @@ patchRouter.patch('/ingredients', async (req, res) => {
     return res.status(400).send({
       error: 'A name must be provided',
     });
-  } 
-    const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
-    const actualUpdates = Object.keys(req.body);
-    const isValidUpdate =
+  }
+  const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
+  const actualUpdates = Object.keys(req.body);
+  const isValidUpdate =
       actualUpdates.every((update) => allowedUpdates.includes(update));
 
-    if (!isValidUpdate) {
-      return res.status(400).send({
-        error: 'Update is not permitted',
-      });
-    } 
-    try {
-      const ingredient = await Ingredient.findOneAndUpdate({name: req.query.name.toString()}, req.body, {
-        new: true,
-        runValidators: true,
-      });
+  if (!isValidUpdate) {
+    return res.status(400).send({
+      error: 'Update is not permitted',
+    });
+  }
+  try {
+    const ingredient = await Ingredient.findOneAndUpdate({name: req.query.name.toString()}, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-      if (!ingredient) {
-        return res.status(404).send();
-      } else {
-        return res.send(ingredient);
-      }
-
-    } catch (error) {
-      return res.status(400).send(error);
+    if (!ingredient) {
+      return res.status(404).send();
     }
-});
 
+    return res.send(ingredient);
+  } catch (error) {
+    return res.status(400).send(error);
+  }
+});
 
 // Ingredients by ID
 patchRouter.patch('/ingredients/:id', async (req, res) => {
-    const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
-    const actualUpdates = Object.keys(req.body);
-    const isValidUpdate =
+  const allowedUpdates = ['name', 'location', 'carboHydrates', 'proteins', 'lipids', 'price', 'type'];
+  const actualUpdates = Object.keys(req.body);
+  const isValidUpdate =
         actualUpdates.every((update) => allowedUpdates.includes(update));
-  
-    if (!isValidUpdate) {
-      return res.status(400).send({
-        error: 'Update is not permitted',
-      });
-    } 
-    try {
-      const ingredient = await Ingredient.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-      });
-        if (!ingredient) {
-          return res.status(404).send();
-        } else {
-          return res.send(ingredient);
-        }
-    } catch(error) {
-      return res.status(400).send(error);
+
+  if (!isValidUpdate) {
+    return res.status(400).send({
+      error: 'Update is not permitted',
+    });
+  }
+  try {
+    const ingredient = await Ingredient.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!ingredient) {
+      return res.status(404).send();
+    } else {
+      return res.send(ingredient);
     }
+  } catch (error) {
+    return res.status(400).send(error);
+  }
 });
 
 // Courses by name
@@ -91,13 +89,13 @@ patchRouter.patch('/courses', async (req, res) => {
       if ((courseObject.ingredients && !courseObject.quantity) ||
       (!courseObject.ingredients && courseObject.quantity)) {
         return res.status(500).send({
-          error: 'PARAMETROS', // //// CAMBIAR ERRRRRRRRRROR
+          error: 'Parameters are missing. Ingredients and their quantities must be specified',
         });
       }
       if (courseObject.ingredients) {
         if (courseObject.ingredients.length != courseObject.quantity.length) {
           return res.status(500).send({
-            error: 'PARAMETROS', // //// CAMBIAR ERRRRRRRRRROR
+            error: 'There must be the same quantity of ingredients as quantities',
           });
         }
         const arrayIngredients: IngredientInterface[] = [];
@@ -137,7 +135,7 @@ patchRouter.patch('/courses', async (req, res) => {
         } else {
           return res.send(course);
         }
-      }  catch (error)  {
+      } catch (error) {
         return res.status(400).send(error);
       }
     }
@@ -200,7 +198,6 @@ patchRouter.patch('/menus', async (req, res) => {
         } else {
           return res.send(menu);
         }
-
       } catch (error) {
         return res.status(400).send(error);
       }
